@@ -1,7 +1,8 @@
 import os
-import quiz
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request, redirect, url_for, render_template
 from werkzeug import secure_filename
+
+import quiz
 
 UPLOAD_FOLDER = 'uploads'
 
@@ -22,15 +23,7 @@ def upload_file():
             filename = secure_filename(file.filename)
             file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
             return "success"
-    return '''
-        <!doctype html>
-        <title>Upload new File</title>
-        <h1>Upload new File</h1>
-        <form action="" method=post enctype=multipart/form-data>
-          <p><input type=file name=file>
-             <input type=submit value=Upload>
-        </form>
-    '''
+    return render_template("index.html")
 
 
 if __name__ == "__main__":
