@@ -1,4 +1,5 @@
 import os
+import quiz
 from flask import Flask, request, redirect, url_for
 from werkzeug import secure_filename
 
@@ -7,6 +8,7 @@ UPLOAD_FOLDER = 'uploads'
 app = Flask(__name__)
 app.debug = True
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] == "txt"
@@ -29,6 +31,7 @@ def upload_file():
              <input type=submit value=Upload>
         </form>
     '''
+
 
 if __name__ == "__main__":
     app.run()
