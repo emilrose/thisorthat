@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+        <title>This or That</title>
+
+        <!-- Bootstrap -->
+        <link href="/static/css/bootstrap-theme.min.css" rel="stylesheet">
+        <link href="/static/css/bootstrap.min.css" rel="stylesheet">
+        <link href="/static/css/mystyles.css" rel="stylesheet">
+        <link href='https://fonts.googleapis.com/css?family=Ubuntu' rel='stylesheet' type='text/css'>
+    </head>
+
+    <body>
+        <div id="content"></div>
+        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+        <!--<script src="/static/js/jquery-1.11.3.min.js"></script>-->
+        <!-- Include all compiled plugins (below), or include individual files as needed -->
+        <script src="/static/js/bootstrap.min.js"></script>
+        <!-- React -->
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/react/0.12.0/react.js"></script>
+        <script src="http://cdnjs.cloudflare.com/ajax/libs/react/0.12.0/JSXTransformer.js"></script>
+        <script src="https://npmcdn.com/react-router/umd/ReactRouter.min.js"></script>
+        <script src="/static/js/ourcode.js"></script>
+        <!--<script src="/static/js/react.js"></script>-->
+        <!--<script src="/static/js/JSXTransformer.js"></script>-->
+
+        <!-- Template -->
+        <script type="text/jsx">
+            var QuizQuestion = React.createClass({
+               render: function() {
+                    return (
+                    <div className="quizQuestion">
+                        This: {this.props.this} <br/>
+                        That: {this.props.that}
+                    </div>
+                    );
+                }
+            });
+
+            var Quiz = React.createClass({
+                getInitialState: function(){
+                    return {quizStatus: 'not_started', question: [null, null], quizQuestions: {},
+                        correct: 'left', score: 0, total:0};
+                },
+
+                componentDidMount: function(){$.ajax({
+                    url: window.location.href.replace('quiz', 'quiz_questions'),
+                    success: function(data) {
+                        this.setState({quizQuestions: data.quiz});
+                        this.nextQuestion();
+                    }.bind(this),
+                    error: function(xhr, status, err) {
+                        console.log("Could not retrieve state.");
+                    }.bind(this)
+                });
+                },
+
+                startQuiz: function(){
+                    this.setState({quizStatus: 'in_progress'});
+                },
+
+                nextQuestion: function(){
+                    if (Object.keys(this.state.quizQuestions).length == 0){
+                        this.setState({quizStatus: 'complete'});
+                    }
+                    else{
+                        var question = this.state.quizQuestions.pop();
+                        var rand = Math.random();
+                        var correct;
+                        if (rand > .5){
+                            correct = 'left';
+                        }
+                        else{
+                            question = [question[1], question[0]];
+                            correct = 'right';
+                        }
+                        this.setState({question: question, correct: correct});
+                    }
+                },
+
+                render: function() {
+                    var startQuizButton = <button type="button" onClick={this.startQuiz}>Start quiz</button>;
+                    var nextQuestionButton = <button type="button" onClick={this.nextQuestion}>Next question</button>;
+                    var quizQuestion = <QuizQuestion this={this.state.question[1]} that={this.state.question[0]}></QuizQuestion>;
+                    var quizOver = <h2>The quiz is complete!</h2>;
+                    return (
+                        <div className="quiz">
+                            {this.state.quizStatus == 'not_started' ? startQuizButton : null}
+                            {this.state.quizStatus == 'in_progress' ? nextQuestionButton : null}
+                            {this.state.quizStatus == 'in_progress' ? quizQuestion : null}
+                            {this.state.quizStatus == 'complete' ? quizOver : null}
+                        </div>
+                    );
+                }
+            });
+
+            React.render(
+                React.createElement(Quiz, null),
+                document.getElementById('content')
+            );
+        </script>
+    </body>
+</html>

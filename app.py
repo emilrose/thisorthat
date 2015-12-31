@@ -1,6 +1,6 @@
 import os
 import json
-from flask import Flask, request, redirect, url_for, render_template, jsonify
+from flask import Flask, request, redirect, url_for, render_template, jsonify, Blueprint
 from werkzeug import secure_filename
 import pickle
 from quiz import create_quiz
@@ -25,15 +25,21 @@ def upload_file():
         quiz = create_quiz(this, that)
         with open(os.path.join(QUIZZES_FOLDER, hash + '.p'), 'wb') as file:
             pickle.dump(quiz, file)
-        return "asd"
+        return redirect(url_for('display_quiz', quiz_id=hash))
     else:
         return render_template("index.html")
 
-@app.route('/quiz/<quiz_id>', methods=['GET'])
-def get_quiz_question(quiz_id):
+
+@app.route('/quiz_questions/<quiz_id>', methods=['GET'])
+def get_quiz_questions(quiz_id):
     with open(os.path.join(QUIZZES_FOLDER,  quiz_id + '.p'), 'rb') as f:
         quiz = pickle.load(f)
     return jsonify({'quiz': quiz})
+
+@app.route('/quiz/<quiz_id>', methods=['GET', 'POST'])
+def display_quiz(quiz_id):
+    return render_template("quiz.html")
+
 
 if __name__ == "__main__":
     app.run()
