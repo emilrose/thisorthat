@@ -16,7 +16,6 @@
 
     <body>
         <div id="content"></div>
-        <h1>test</h1>
         <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
         <!--<script src="/static/js/jquery-1.11.3.min.js"></script>-->
@@ -25,45 +24,81 @@
         <!-- React -->
         <script src="http://cdnjs.cloudflare.com/ajax/libs/react/0.12.0/react.js"></script>
         <script src="http://cdnjs.cloudflare.com/ajax/libs/react/0.12.0/JSXTransformer.js"></script>
+        <script src="/static/js/ourcode.js"></script>
         <!--<script src="/static/js/react.js"></script>-->
         <!--<script src="/static/js/JSXTransformer.js"></script>-->
 
         <!-- Template -->
         <script type="text/jsx">
-            var helloMessage = React.createClass({
-               render: function() {
+            var topLevel = React.createClass({
+                render: function() {
                     return (
                     <div>
-                        <div>Hello {this.props.name}</div>
-
                         <div id="uploads">
-                        <form action="" method='post' encType='multipart/form-data'>
-                            <p>
-                            <input type='file' name='file'></input>
-                            <input type='submit' value='Upload'></input>
-                            </p>
-                        </form>
+                            <form action="" method='post' encType='multipart/form-data'>
+                                <p>
+                                    <input type='file' name='this'>This</input>
+                                    <input type='file' name='that'>That</input>
+                                    <input type='submit' value='Upload'></input>
+                                </p>
+                            </form>
                         </div>
                         <div>
-                        {this.state}
+                            <Quiz quizQuestions={this.state} />
                         </div>
                     </div>
                     );
                 },
                 componentDidMount: function(){$.ajax({
-                 url: "http://127.0.0.1:5000/api",
-                 success: function(data) {
-                      this.setState(data);
-                 }.bind(this),
-                 error: function(xhr, status, err) {
-                     console.error(this.props.url, status, err.toString());
-                 }.bind(this)
+                    url: "http://127.0.0.1:5000/quiz/1",
+                    success: function(data) {
+                        this.setState(data.quiz);
+                    }.bind(this),
+                    error: function(xhr, status, err) {
+                        console.error(this.props.url, status, err.toString());
+                    }.bind(this)
                 });
+                }
+            });
+            var Quiz = React.createClass({
+                startQuiz: function(){
+                    this.setState({quizStarted: false});
+                },
+                nextQuestion: function(){
+                    var numOfQuestions = Object.keys(this.props.quizQuestions).length;
+                    var questionNumber = getRandomInt(0, numOfQuestions-1);
+                    var question = this.props.quizQuestions[questionNumber];
+                    this.setState({question: question})
+                },
+                render: function() {
+                    var startQuizButton = <button type="button" onClick={this.startQuiz}>Start quiz</button>;
+                    var nextQuestionButton = <button type="button" onClick={this.nextQuestion}>Next question</button>;
+                    var quizQuestion = <QuizQuestion this={this.state.question[0]} that={this.state.question[1]}></QuizQuestion>
+                    return (
+                    <div>
+                        {this.state.quizStarted ? startQuizButton : null}
+                        {!this.state.quizStarted ? nextQuestionButton : null}
+                        {!this.state.quizStarted ? quizQuestion : null}
+                    </div>
+                    );
+                },
+                getInitialState: function(){
+                    return {quizStarted: true, question: [null, null]};
+                }
+            });
+            var QuizQuestion = React.createClass({
+               render: function() {
+                    return (
+                    <div>
+                        This: {this.props.this} <br/>
+                        That: {this.props.that}
+                    </div>
+                    );
                 }
             });
 
             React.render(
-                React.createElement(helloMessage, {'name': 'emil'}),
+                React.createElement(topLevel, null),
                 document.getElementById('content')
             );
         </script>

@@ -1,51 +1,39 @@
 import os
+import json
 from flask import Flask, request, redirect, url_for, render_template, jsonify
 from werkzeug import secure_filename
-import quiz
-
+import pickle
+from quiz import create_quiz
+import uuid
 
 UPLOAD_FOLDER = 'uploads'
+QUIZZES_FOLDER = 'quizzes'
 
 app = Flask(__name__)
 app.debug = True
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] == "txt"
-
 
 @app.route("/", methods=['GET', 'POST'])
 def upload_file():
     if request.method == "POST":
-        file = file = request.files['file']
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            return "success"
-    return render_template("index.html")
+        this = request.files['this'].read()
+        that = request.files['that'].read()
+        hash = uuid.uuid4().hex
+        quiz = create_quiz(this, that)
+        with open(os.path.join(QUIZZES_FOLDER, hash + '.p'), 'wb') as file:
+            pickle.dump(quiz, file)
+        return "asd"
+    else:
+        return render_template("index.html")
 
-tasks = [
-    {
-        'id': 1,
-        'title': u'Buy groceries',
-        'description': u'Milk, Cheese, Pizza, Fruit, Tylenol',
-        'done': False
-    },
-    {
-        'id': 2,
-        'title': u'Learn Python',
-        'description': u'Need to find a good Python tutorial on the web',
-        'done': False
-    }
-]
-
-
-@app.route('/api', methods=['GET'])
-def get_tasks():
-    return jsonify({'tasks': tasks})
-
-
+@app.route('/quiz/<quiz_id>', methods=['GET'])
+def get_quiz_question(quiz_id):
+    with open(os.path.join(QUIZZES_FOLDER,  quiz_id + '.p'), 'rb') as f:
+        quiz = pickle.load(f)
+    return jsonify({'quiz': quiz})
 
 if __name__ == "__main__":
     app.run()
