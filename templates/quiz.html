@@ -34,24 +34,65 @@
             var QuizQuestion = React.createClass({
                render: function() {
                     return (
-                    <div className="quizQuestion">
-                        This: {this.props.this} <br/>
-                        That: {this.props.that}
-                    </div>
+                        <div className="quizQuestion">
+                            This: {this.props.this} <br/>
+                            That: {this.props.that}
+                        </div>
                     );
                 }
+            });
+
+            var AnswerSelector = React.createClass({
+                getInitialState: function(){
+                    return {answer: '', questionNum: 0};
+                },
+
+                handleSubmit: function(){
+                    if(this.state.answer) {
+                        this.props.onAnswerSubmit(this.state.answer);
+                        var questionNum = this.state.questionNum;
+                        this.setState({answer: '', questionNum: questionNum + 1});
+                        $('input[name=answer]').attr('checked',false);
+                    }
+                },
+
+                handleChange: function(event){
+                    this.setState({answer: event.target.value});
+                },
+
+                render: function(){
+                    return(
+                        <div className="answerSelector">
+                            <form action="" onChange={this.handleChange}>
+                                <input type="radio" name="answer" value="this">This<br/></input>
+                                <input type="radio" name="answer" value="that">That</input> <br/>
+                                <input type="button" onClick={this.handleSubmit}/>
+                            </form>
+                        </div>
+                   );
+               }
             });
 
             var Quiz = React.createClass({
                 getInitialState: function(){
                     return {quizStatus: 'not_started', question: [null, null], quizQuestions: {},
-                        correct: 'left', score: 0, total:0};
+                        correct: 'this', score: 0, total: 0};
+                },
+
+                handleAnswer: function(answer){
+                    console.log('got answer:' + answer);
+                    if (answer == this.state.correct){
+                        var score = this.state.score;
+                        this.setState({score: score + 1});
+                        console.log("was correct");
+                    }
+                    this.nextQuestion();
                 },
 
                 componentDidMount: function(){$.ajax({
                     url: window.location.href.replace('quiz', 'quiz_questions'),
                     success: function(data) {
-                        this.setState({quizQuestions: data.quiz});
+                        this.setState({quizQuestions: data.quiz, total: Object.keys(data.quiz).length});
                         this.nextQuestion();
                     }.bind(this),
                     error: function(xhr, status, err) {
@@ -73,11 +114,11 @@
                         var rand = Math.random();
                         var correct;
                         if (rand > .5){
-                            correct = 'left';
+                            correct = 'this';
                         }
                         else{
                             question = [question[1], question[0]];
-                            correct = 'right';
+                            correct = 'that';
                         }
                         this.setState({question: question, correct: correct});
                     }
@@ -85,14 +126,16 @@
 
                 render: function() {
                     var startQuizButton = <button type="button" onClick={this.startQuiz}>Start quiz</button>;
-                    var nextQuestionButton = <button type="button" onClick={this.nextQuestion}>Next question</button>;
+                    //var nextQuestionButton = <button type="button" onClick={this.nextQuestion}>Next question</button>;
+                    //{this.state.quizStatus == 'in_progress' ? nextQuestionButton : null}
                     var quizQuestion = <QuizQuestion this={this.state.question[1]} that={this.state.question[0]}></QuizQuestion>;
-                    var quizOver = <h2>The quiz is complete!</h2>;
+                    var answerSelector = <AnswerSelector onAnswerSubmit={this.handleAnswer} />;
+                    var quizOver = <h2>The quiz is complete! You got {this.state.score} questions correct, out of {this.state.total} questions overall.</h2>;
                     return (
                         <div className="quiz">
                             {this.state.quizStatus == 'not_started' ? startQuizButton : null}
-                            {this.state.quizStatus == 'in_progress' ? nextQuestionButton : null}
                             {this.state.quizStatus == 'in_progress' ? quizQuestion : null}
+                            {this.state.quizStatus == 'in_progress' ? answerSelector : null}
                             {this.state.quizStatus == 'complete' ? quizOver : null}
                         </div>
                     );
